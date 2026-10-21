@@ -6,6 +6,8 @@ const SFO = { lat: 37.6213, lon: -122.379 }
 const RADIUS_DEG = 0.5
 const MAX_FLIGHTS = 5
 
+const POLL_INTERVAL_MS = 10000
+
 type Flight = {
   icao24: string
   callsign: string
@@ -64,9 +66,11 @@ function NearbyFlights() {
   const [flights, setFlights] = useState<Flight[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
     const params = new URLSearchParams({
       lamin: String(SFO.lat - RADIUS_DEG),
       lomin: String(SFO.lon - RADIUS_DEG),
@@ -90,25 +94,54 @@ function NearbyFlights() {
           .slice(0, MAX_FLIGHTS)
 
         setFlights(nearest)
+        setUpdatedAt(new Date())
+        setError(null)
       } catch (err) {
         if (controller.signal.aborted) return
+        // Keep showing the last good results alongside the error
         setError(err instanceof Error ? err.message : 'Failed to fetch flights')
       } finally {
-        if (!controller.signal.aborted) setLoading(false)
+        if (!controller.signal.aborted) {
+          setLoading(false)
+          scheduleNext()
+        }
       }
     }
 
+    // Chain timeouts rather than setInterval so slow requests never overlap
+    function scheduleNext() {
+      clearTimeout(timeoutId)
+      if (document.hidden) return
+      timeoutId = setTimeout(fetchFlights, POLL_INTERVAL_MS)
+    }
+
+    // Pause polling while the tab is hidden to save API quota
+    function handleVisibilityChange() {
+      clearTimeout(timeoutId)
+      if (!document.hidden) fetchFlights()
+    }
+
     fetchFlights()
-    return () => controller.abort()
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      controller.abort()
+      clearTimeout(timeoutId)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   if (loading) return <p>Loading flights near SFO…</p>
-  if (error) return <p>Error: {error}</p>
-  if (flights.length === 0) return <p>No flights found near SFO.</p>
+  if (flights.length === 0) {
+    return <p>{error ? `Error: ${error}` : 'No flights found near SFO.'}</p>
+  }
 
   return (
     <section>
       <h2>{flights.length} flights near SFO</h2>
+      <p>
+        Updated {updatedAt?.toLocaleTimeString()} · refreshes every {POLL_INTERVAL_MS / 1000}s
+        {error && ` · Last refresh failed: ${error}`}
+      </p>
       <table>
         <thead>
           <tr>
