@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import useSWR from 'swr'
 
 // SFO airport coordinates
 const SFO = { lat: 37.6213, lon: -122.379 }
@@ -62,85 +62,53 @@ function toFlight(s: StateVector): Flight | null {
   }
 }
 
+// /opensky is proxied to https://opensky-network.org/api in vite.config.ts
+const FLIGHTS_URL = `/opensky/states/all?${new URLSearchParams({
+  lamin: String(SFO.lat - RADIUS_DEG),
+  lomin: String(SFO.lon - RADIUS_DEG),
+  lamax: String(SFO.lat + RADIUS_DEG),
+  lomax: String(SFO.lon + RADIUS_DEG),
+})}`
+
+type NearbyFlightsData = {
+  flights: Flight[]
+  updatedAt: Date
+}
+
+async function fetchNearestFlights(url: string): Promise<NearbyFlightsData> {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`OpenSky returned ${res.status}`)
+  const data: { states: StateVector[] | null } = await res.json()
+
+  const flights = (data.states ?? [])
+    .map(toFlight)
+    .filter((f): f is Flight => f !== null)
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .slice(0, MAX_FLIGHTS)
+
+  return { flights, updatedAt: new Date() }
+}
+
 function NearbyFlights() {
-  const [flights, setFlights] = useState<Flight[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  // SWR waits for each request to settle before scheduling the next, pauses
+  // polling while the tab is hidden, and keeps the last data when a refresh fails
+  const { data, error, isLoading } = useSWR(FLIGHTS_URL, fetchNearestFlights, {
+    refreshInterval: POLL_INTERVAL_MS,
+  })
 
-  useEffect(() => {
-    const controller = new AbortController()
-    let timeoutId: ReturnType<typeof setTimeout> | undefined
-    const params = new URLSearchParams({
-      lamin: String(SFO.lat - RADIUS_DEG),
-      lomin: String(SFO.lon - RADIUS_DEG),
-      lamax: String(SFO.lat + RADIUS_DEG),
-      lomax: String(SFO.lon + RADIUS_DEG),
-    })
-
-    async function fetchFlights() {
-      try {
-        // /opensky is proxied to https://opensky-network.org/api in vite.config.ts
-        const res = await fetch(`/opensky/states/all?${params}`, {
-          signal: controller.signal,
-        })
-        if (!res.ok) throw new Error(`OpenSky returned ${res.status}`)
-        const data: { states: StateVector[] | null } = await res.json()
-
-        const nearest = (data.states ?? [])
-          .map(toFlight)
-          .filter((f): f is Flight => f !== null)
-          .sort((a, b) => a.distanceKm - b.distanceKm)
-          .slice(0, MAX_FLIGHTS)
-
-        setFlights(nearest)
-        setUpdatedAt(new Date())
-        setError(null)
-      } catch (err) {
-        if (controller.signal.aborted) return
-        // Keep showing the last good results alongside the error
-        setError(err instanceof Error ? err.message : 'Failed to fetch flights')
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false)
-          scheduleNext()
-        }
-      }
-    }
-
-    // Chain timeouts rather than setInterval so slow requests never overlap
-    function scheduleNext() {
-      clearTimeout(timeoutId)
-      if (document.hidden) return
-      timeoutId = setTimeout(fetchFlights, POLL_INTERVAL_MS)
-    }
-
-    // Pause polling while the tab is hidden to save API quota
-    function handleVisibilityChange() {
-      clearTimeout(timeoutId)
-      if (!document.hidden) fetchFlights()
-    }
-
-    fetchFlights()
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => {
-      controller.abort()
-      clearTimeout(timeoutId)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
-  }, [])
-
-  if (loading) return <p>Loading flights near SFO…</p>
-  if (flights.length === 0) {
-    return <p>{error ? `Error: ${error}` : 'No flights found near SFO.'}</p>
+  if (isLoading) return <p>Loading flights near SFO…</p>
+  if (!data || data.flights.length === 0) {
+    return <p>{error ? `Error: ${error.message}` : 'No flights found near SFO.'}</p>
   }
+
+  const { flights, updatedAt } = data
 
   return (
     <section>
       <h2>{flights.length} flights near SFO</h2>
       <p>
-        Updated {updatedAt?.toLocaleTimeString()} · refreshes every {POLL_INTERVAL_MS / 1000}s
-        {error && ` · Last refresh failed: ${error}`}
+        Updated {updatedAt.toLocaleTimeString()} · refreshes every {POLL_INTERVAL_MS / 1000}s
+        {error && ` · Last refresh failed: ${error.message}`}
       </p>
       <table>
         <thead>
