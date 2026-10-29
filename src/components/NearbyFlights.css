@@ -1,17 +1,8 @@
 .flights-card {
   /* Same orange the globe uses for the nearest flights */
-  --nearest: #f5a623;
   --nearest-text: #a86200;
   --nearest-bg: rgba(245, 166, 35, 0.16);
-
-  width: min(760px, calc(100% - 32px));
-  margin: 16px auto 40px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  text-align: left;
+  --row-height: 48px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -31,6 +22,7 @@
 
 .flights-status {
   font-size: 14px;
+  min-height: 1.45em;
 }
 
 .flights-scroll {
@@ -40,7 +32,26 @@
 .flights-table {
   width: 100%;
   border-collapse: collapse;
+  /* Column widths come from the header, not the data, so they don't shift
+     as callsigns and countries change */
+  table-layout: fixed;
   font-size: 15px;
+}
+
+.flights-table .col-callsign {
+  width: 30%;
+}
+.flights-table .col-country {
+  width: 26%;
+}
+.flights-table .col-altitude {
+  width: 17%;
+}
+.flights-table .col-speed {
+  width: 12%;
+}
+.flights-table .col-distance {
+  width: 15%;
 }
 
 .flights-table th {
@@ -55,19 +66,25 @@
   text-transform: uppercase;
   text-align: left;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .flights-table td {
-  padding: 12px 20px;
+  /* Fixed row height: pills, badges and plain text all fit inside it */
+  height: var(--row-height);
+  box-sizing: border-box;
+  padding: 0 20px;
   color: var(--text-h);
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 .flights-table tbody tr + tr td {
   border-top: 1px solid var(--border);
 }
 
-.flights-table tbody tr:hover td {
+.flights-table tbody tr:not(.placeholder-row):hover td {
   background: var(--social-bg);
 }
 
@@ -76,19 +93,27 @@
   font-variant-numeric: tabular-nums;
 }
 
-.flights-table .muted {
+.flights-table .muted,
+.placeholder-row td {
   color: var(--text);
 }
 
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .callsign {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
   font-family: var(--mono);
   font-weight: 600;
 }
 
 .rank {
+  flex: none;
   display: inline-grid;
   place-items: center;
   width: 22px;
@@ -101,18 +126,30 @@
   font-weight: 700;
 }
 
+.placeholder-row .rank {
+  background: var(--code-bg);
+  color: var(--text);
+}
+
 .ground-badge {
   display: inline-block;
-  padding: 2px 8px;
+  box-sizing: border-box;
+  height: 22px;
+  padding: 0 8px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--code-bg);
   color: var(--text);
   font-size: 12px;
   font-weight: 500;
+  line-height: 20px;
 }
 
 @media (max-width: 600px) {
+  .flights-card {
+    --row-height: 44px;
+  }
+
   .flights-header {
     padding-inline: 14px;
   }
@@ -137,11 +174,25 @@
   }
 
   .flights-table th {
-    letter-spacing: 0.03em;
+    font-size: 11px;
+    letter-spacing: 0.02em;
   }
 
   .flights-table .hide-narrow {
     display: none;
+  }
+
+  .flights-table .col-callsign {
+    width: 34%;
+  }
+  .flights-table .col-altitude {
+    width: 25%;
+  }
+  .flights-table .col-speed {
+    width: 16%;
+  }
+  .flights-table .col-distance {
+    width: 25%;
   }
 
   .callsign {
@@ -155,7 +206,9 @@
   }
 
   .ground-badge {
-    padding: 1px 6px;
+    height: 20px;
+    padding: 0 6px;
     font-size: 11px;
+    line-height: 18px;
   }
 }

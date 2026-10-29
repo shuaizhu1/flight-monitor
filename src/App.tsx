@@ -73,12 +73,21 @@ function App() {
       }
 
   return (
-    <main>
-      <h1>Flight Monitor</h1>
+    <main className="page">
+      <header className="page-header">
+        <div>
+          <h1>Flight Monitor</h1>
+          <p className="page-subtitle">Air traffic within about 55 km of San Francisco International (SFO)</p>
+        </div>
+        <span className={`mode-badge mode-${flights.mode}`}>{flights.mode === 'live' ? 'Live' : 'Replay'}</span>
+      </header>
+
       <FlightsProvider value={flights}>
-        <Suspense fallback={<p>Loading globe…</p>}>
-          <FlightGlobe />
-        </Suspense>
+        <div className="card globe-card">
+          <Suspense fallback={<div className="globe-placeholder">Loading globe…</div>}>
+            <FlightGlobe />
+          </Suspense>
+        </div>
         <TimelineScrubber
           replay={timelineReplay}
           notice={LIVE_AVAILABLE ? fallbackNotice : PRODUCTION_NOTICE}
@@ -86,6 +95,11 @@ function App() {
         />
         <NearbyFlights />
       </FlightsProvider>
+
+      <footer className="page-footer">
+        Flight data from <a href="https://opensky-network.org">The OpenSky Network</a> · Map by{' '}
+        <a href="https://www.mapbox.com">Mapbox</a>
+      </footer>
     </main>
   )
 }

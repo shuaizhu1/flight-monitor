@@ -107,7 +107,7 @@ function FlightGlobe() {
     <Map
       mapboxAccessToken={MAPBOX_TOKEN}
       initialViewState={{ longitude: -100, latitude: 40, zoom: 1.5 }}
-      style={{ width: '100%', height: 500 }}
+      style={{ width: '100%', height: '100%' }}
       mapStyle="mapbox://styles/mapbox/dark-v11"
       projection="globe"
       fog={FOG}
