@@ -1,0 +1,161 @@
+.flights-card {
+  /* Same orange the globe uses for the nearest flights */
+  --nearest: #f5a623;
+  --nearest-text: #a86200;
+  --nearest-bg: rgba(245, 166, 35, 0.16);
+
+  width: min(760px, calc(100% - 32px));
+  margin: 16px auto 40px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  text-align: left;
+}
+
+@media (prefers-color-scheme: dark) {
+  .flights-card {
+    --nearest-text: #ffc163;
+    --nearest-bg: rgba(245, 166, 35, 0.18);
+  }
+}
+
+.flights-header {
+  padding: 16px 20px 14px;
+}
+
+.flights-header h2 {
+  margin: 0 0 4px;
+}
+
+.flights-status {
+  font-size: 14px;
+}
+
+.flights-scroll {
+  overflow-x: auto;
+}
+
+.flights-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.flights-table th {
+  padding: 10px 20px;
+  background: var(--code-bg);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.flights-table td {
+  padding: 12px 20px;
+  color: var(--text-h);
+  white-space: nowrap;
+}
+
+.flights-table tbody tr + tr td {
+  border-top: 1px solid var(--border);
+}
+
+.flights-table tbody tr:hover td {
+  background: var(--social-bg);
+}
+
+.flights-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.flights-table .muted {
+  color: var(--text);
+}
+
+.callsign {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+.rank {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--nearest-bg);
+  color: var(--nearest-text);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ground-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--code-bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .flights-header {
+    padding-inline: 14px;
+  }
+
+  .flights-table {
+    font-size: 14px;
+  }
+
+  .flights-table th,
+  .flights-table td {
+    padding-inline: 6px;
+  }
+
+  .flights-table th:first-child,
+  .flights-table td:first-child {
+    padding-left: 14px;
+  }
+
+  .flights-table th:last-child,
+  .flights-table td:last-child {
+    padding-right: 14px;
+  }
+
+  .flights-table th {
+    letter-spacing: 0.03em;
+  }
+
+  .flights-table .hide-narrow {
+    display: none;
+  }
+
+  .callsign {
+    gap: 8px;
+  }
+
+  .rank {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+
+  .ground-badge {
+    padding: 1px 6px;
+    font-size: 11px;
+  }
+}
