@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OpenSky recordings from scripts/record-opensky.ts
+recordings

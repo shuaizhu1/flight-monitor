@@ -75,13 +75,17 @@ export function formatSpeed(f: Flight) {
   return f.velocityMs != null ? `${Math.round(f.velocityMs * 1.944)} kt` : '—'
 }
 
-// /opensky is proxied to https://opensky-network.org/api in vite.config.ts
-const FLIGHTS_URL = `/opensky/states/all?${new URLSearchParams({
+// OpenSky API path for every aircraft in the search box; also used by
+// scripts/record-opensky.ts
+export const STATES_PATH = `/states/all?${new URLSearchParams({
   lamin: String(SFO.lat - RADIUS_DEG),
   lomin: String(SFO.lon - RADIUS_DEG),
   lamax: String(SFO.lat + RADIUS_DEG),
   lomax: String(SFO.lon + RADIUS_DEG),
 })}`
+
+// /opensky is proxied to https://opensky-network.org/api in vite.config.ts
+const FLIGHTS_URL = `/opensky${STATES_PATH}`
 
 type NearbyFlightsData = {
   // Every aircraft in the search box, nearest to SFO first
