@@ -98,9 +98,6 @@ export function createOpenSkyClient(credentials: OpenSkyCredentials | null) {
     get,
     // Credentials are configured
     authenticated: credentials !== null,
-    // Requests currently go out with the account: credentials are configured
-    // and haven't been rejected within the last AUTH_RETRY_MS
-    usingAccount: () => credentials !== null && Date.now() >= authRetryAt,
   }
 }
 

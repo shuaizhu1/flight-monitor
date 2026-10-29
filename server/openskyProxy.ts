@@ -5,7 +5,8 @@ import type { OpenSkyClient } from './opensky.ts'
 // Response headers worth passing through to the browser
 const FORWARDED_HEADERS = ['content-type', 'x-rate-limit-remaining', 'x-rate-limit-retry-after-seconds']
 
-// Serves /opensky/* from the OpenSky API on the dev and preview servers.
+// Serves /opensky/* from the OpenSky API on the dev server. Production builds
+// (including `npm run preview`) never request live data, only recordings.
 // OpenSky only allows CORS from its own origin, and the OAuth token has to be
 // attached server-side so the client secret stays out of the browser.
 export function openskyProxy(client: OpenSkyClient): Plugin {
@@ -36,9 +37,6 @@ export function openskyProxy(client: OpenSkyClient): Plugin {
       server.config.logger.info(
         `  OpenSky: ${client.authenticated ? 'using account credentials' : 'anonymous (set OPENSKY_CLIENT_ID/OPENSKY_CLIENT_SECRET in .env.local)'}`,
       )
-      server.middlewares.use('/opensky', handle)
-    },
-    configurePreviewServer(server) {
       server.middlewares.use('/opensky', handle)
     },
   }

@@ -75,6 +75,14 @@ While `npm run dev` is running, recordings in `recordings/` appear in the app's
 timeline, where you can play and scrub through them. Replaying sends no OpenSky
 requests.
 
+## Production builds
+
+Live data only works with `npm run dev`. A production build (`npm run build`,
+`npm run preview`, or a Vercel deployment) never contacts OpenSky. It plays the
+newest demo recording in `public/recordings/` as soon as it loads, and hides the
+"Live" option. To ship a different recording, copy its `.jsonl` file into
+`public/recordings/` and add it to `public/recordings/index.json`.
+
 ## Other scripts
 
 | Command | What it does |

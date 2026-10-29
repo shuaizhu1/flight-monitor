@@ -5,8 +5,8 @@
 scripts
 /recordings
 
-# Local secrets: the deployment gets OpenSky credentials from the Vercel
-# project's environment variables, never from an uploaded .env file
+# Local secrets. The deployment never contacts OpenSky; VITE_MAPBOX_TOKEN comes
+# from the Vercel project's environment variables, not an uploaded .env file
 .env
 .env.*
 

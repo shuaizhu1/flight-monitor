@@ -14,26 +14,32 @@ function recordingLabel({ name, size }: RecordingInfo) {
   return `${when} · ${sizeLabel}`
 }
 
-function TimelineScrubber({ replay, notice }: { replay: Replay; notice?: string | null }) {
+type Props = {
+  replay: Replay
+  notice?: string | null
+  // False in production builds, which only replay recordings
+  liveAvailable?: boolean
+}
+
+function TimelineScrubber({ replay, notice, liveAvailable = true }: Props) {
   const { data: recordings, error: listError } = useRecordingList()
   const { frames } = replay
+  // The list is sorted newest first
+  const latest = recordings?.[0]
+  const current = recordings?.find((r) => r.name === replay.selected)
 
   return (
     <section
       aria-label="Replay timeline"
       style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, margin: '12px 0' }}
     >
-      <label>
-        Recording{' '}
-        <select value={replay.selected ?? ''} onChange={(e) => replay.select(e.target.value || null)}>
-          <option value="">Live</option>
-          {recordings?.map((r) => (
-            <option key={r.name} value={r.name}>
-              {recordingLabel(r)}
-            </option>
-          ))}
-        </select>
-      </label>
+      {replay.active
+        ? current && <span>Recording · {recordingLabel(current)}</span>
+        : latest && (
+            <button type="button" onClick={() => replay.select(latest.name)}>
+              Show latest recording · {recordingLabel(latest)}
+            </button>
+          )}
 
       {notice && <span role="status">{notice}</span>}
       {recordings?.length === 0 && (
@@ -73,9 +79,11 @@ function TimelineScrubber({ replay, notice }: { replay: Replay; notice?: string 
               ))}
             </select>
           </label>
-          <button type="button" onClick={() => replay.select(null)}>
-            Back to live
-          </button>
+          {liveAvailable && (
+            <button type="button" onClick={() => replay.select(null)}>
+              Back to live
+            </button>
+          )}
         </>
       )}
     </section>
