@@ -16,6 +16,9 @@ const FlightGlobe = lazy(() => import('./components/FlightGlobe'))
 // proxies it. Production builds (e.g. on Vercel) never contact OpenSky and
 // replay the demo recordings in public/recordings/ instead.
 const LIVE_AVAILABLE = import.meta.env.DEV
+// Shown on production builds, where live data is never available
+const PRODUCTION_NOTICE =
+  'Live data unavailable: the OpenSky API blocks Vercel requests. Run locally with npm run dev to view live data.'
 
 function App() {
   const replay = useReplay()
@@ -76,7 +79,11 @@ function App() {
         <Suspense fallback={<p>Loading globe…</p>}>
           <FlightGlobe />
         </Suspense>
-        <TimelineScrubber replay={timelineReplay} notice={fallbackNotice} liveAvailable={LIVE_AVAILABLE} />
+        <TimelineScrubber
+          replay={timelineReplay}
+          notice={LIVE_AVAILABLE ? fallbackNotice : PRODUCTION_NOTICE}
+          liveAvailable={LIVE_AVAILABLE}
+        />
         <NearbyFlights />
       </FlightsProvider>
     </main>

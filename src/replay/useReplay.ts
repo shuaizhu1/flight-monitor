@@ -20,8 +20,8 @@ export function useReplay() {
   const duration = frames && frames.length > 0 ? frames[frames.length - 1].time - start : 0
   const position = Math.min(offset, duration)
   const time = start + position
-  // Playback stops by itself at the end of the recording
-  const playing = playRequested && frames !== undefined && position < duration
+  // Playback loops; a single-snapshot recording has nothing to play
+  const playing = playRequested && frames !== undefined && duration > 0
 
   useEffect(() => {
     if (!playing) return
@@ -37,7 +37,8 @@ export function useReplay() {
         const advance = pending
         pending = 0
         lastCommit = now
-        setOffset((o) => Math.min(o + advance, duration))
+        // Wrap past the end back to the start of the recording
+        setOffset((o) => (o + advance) % duration)
       }
       frameId = requestAnimationFrame(tick)
     }

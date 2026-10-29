@@ -34,7 +34,7 @@ function TimelineScrubber({ replay, notice, liveAvailable = true }: Props) {
       style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, margin: '12px 0' }}
     >
       {replay.active
-        ? current && <span>Recording · {recordingLabel(current)}</span>
+        ? current && <span>Playing from recording · {recordingLabel(current)}</span>
         : latest && (
             <button type="button" onClick={() => replay.select(latest.name)}>
               Show latest recording · {recordingLabel(latest)}
