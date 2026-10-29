@@ -1,0 +1,14 @@
+# Files never uploaded to Vercel, including by `vercel deploy` from this machine
+
+# The recorder only runs locally (npm run record); the deployment ships the
+# demo recordings in public/recordings/ instead
+scripts
+/recordings
+
+# Local secrets: the deployment gets OpenSky credentials from the Vercel
+# project's environment variables, never from an uploaded .env file
+.env
+.env.*
+
+node_modules
+dist

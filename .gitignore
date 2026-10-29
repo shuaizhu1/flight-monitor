@@ -23,5 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# OpenSky recordings from scripts/record-opensky.ts
-recordings
+# OpenSky recordings from scripts/record-opensky.ts (root folder only, so the
+# demo recordings in public/recordings/ are committed and deployed)
+/recordings

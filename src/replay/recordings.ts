@@ -6,6 +6,12 @@ import type { Frame } from './interpolate.ts'
 // Matches server/recordingsPlugin.ts
 export type RecordingInfo = { name: string; size: number; modified: string }
 
+// In development the Vite plugin lists the local recordings/ folder; a
+// production build (e.g. on Vercel) serves the demo recordings committed to
+// public/recordings/ as static files
+const LIST_URL = import.meta.env.DEV ? '/api/recordings' : '/recordings/index.json'
+const RECORDINGS_BASE = import.meta.env.DEV ? '/api/recordings' : '/recordings'
+
 // One line of a recording written by scripts/record-opensky.ts
 type RecordedLine = {
   fetchedAt: string
@@ -44,12 +50,12 @@ async function fetchRecording(url: string) {
 }
 
 export function useRecordingList() {
-  return useSWR('/api/recordings', fetchJson<RecordingInfo[]>)
+  return useSWR(LIST_URL, fetchJson<RecordingInfo[]>)
 }
 
 // Loads and parses a recording once; null loads nothing
 export function useRecording(name: string | null) {
-  return useSWR(name ? `/api/recordings/${encodeURIComponent(name)}` : null, fetchRecording, {
+  return useSWR(name ? `${RECORDINGS_BASE}/${encodeURIComponent(name)}` : null, fetchRecording, {
     revalidateIfStale: false,
     revalidateOnFocus: false,
     revalidateOnReconnect: false,

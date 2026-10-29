@@ -7,7 +7,7 @@ export default defineConfig({
     // Hook tests opt into a browser-like environment with a
     // `// @vitest-environment jsdom` comment
     environment: 'node',
-    include: ['src/**/*.test.{ts,tsx}', 'server/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}', 'server/**/*.test.ts', 'api/**/*.test.ts'],
     restoreMocks: true,
     unstubGlobals: true,
   },

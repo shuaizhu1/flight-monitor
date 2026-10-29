@@ -43,9 +43,11 @@ describe('OpenSky client', () => {
   it('makes anonymous requests when no credentials are configured', async () => {
     const opensky = mockOpenSky({ api: () => new Response('{}', { status: 200 }) })
 
-    const res = await createOpenSkyClient(null).get(PATH)
+    const client = createOpenSkyClient(null)
+    const res = await client.get(PATH)
 
     expect(res.status).toBe(200)
+    expect(client.usingAccount()).toBe(false)
     expect(opensky.tokenCalls()).toHaveLength(0)
     expect(authHeader(opensky.apiCalls()[0][1])).toBeUndefined()
   })
@@ -106,8 +108,10 @@ describe('OpenSky client', () => {
     })
     const client = createOpenSkyClient(CREDENTIALS)
 
+    expect(client.usingAccount()).toBe(true)
     const first = await client.get(PATH)
     expect(first.status).toBe(200)
+    expect(client.usingAccount()).toBe(false)
     expect(authHeader(opensky.apiCalls()[0][1])).toBeUndefined()
     expect(warn).toHaveBeenCalledTimes(1)
     expect(warn.mock.calls[0][0]).toMatch(/token request failed with 401; using anonymous access/)
@@ -120,6 +124,7 @@ describe('OpenSky client', () => {
 
     // After 5 minutes the credentials are tried again
     vi.advanceTimersByTime(60_000)
+    expect(client.usingAccount()).toBe(true)
     await client.get(PATH)
     expect(opensky.tokenCalls()).toHaveLength(2)
   })

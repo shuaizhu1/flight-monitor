@@ -94,7 +94,14 @@ export function createOpenSkyClient(credentials: OpenSkyCredentials | null) {
     return fetch(url, { signal })
   }
 
-  return { get, authenticated: credentials !== null }
+  return {
+    get,
+    // Credentials are configured
+    authenticated: credentials !== null,
+    // Requests currently go out with the account: credentials are configured
+    // and haven't been rejected within the last AUTH_RETRY_MS
+    usingAccount: () => credentials !== null && Date.now() >= authRetryAt,
+  }
 }
 
 export type OpenSkyClient = ReturnType<typeof createOpenSkyClient>

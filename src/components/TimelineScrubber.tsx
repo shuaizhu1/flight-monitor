@@ -14,7 +14,7 @@ function recordingLabel({ name, size }: RecordingInfo) {
   return `${when} · ${sizeLabel}`
 }
 
-function TimelineScrubber({ replay }: { replay: Replay }) {
+function TimelineScrubber({ replay, notice }: { replay: Replay; notice?: string | null }) {
   const { data: recordings, error: listError } = useRecordingList()
   const { frames } = replay
 
@@ -35,6 +35,7 @@ function TimelineScrubber({ replay }: { replay: Replay }) {
         </select>
       </label>
 
+      {notice && <span role="status">{notice}</span>}
       {recordings?.length === 0 && (
         <span>
           No recordings yet — run <code>npm run record</code>
