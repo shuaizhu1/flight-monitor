@@ -8,6 +8,9 @@ const TOKEN_URL =
 export const OPENSKY_API = 'https://opensky-network.org/api'
 // Refresh a little before expiry so a request never goes out with a stale token
 const EXPIRY_MARGIN_MS = 30_000
+// When the credentials don't work, stay anonymous this long before trying them
+// again, rather than hitting the token endpoint on every request
+const AUTH_RETRY_MS = 5 * 60_000
 
 export type OpenSkyCredentials = { clientId: string; clientSecret: string }
 
@@ -33,7 +36,7 @@ export function createOpenSkyClient(credentials: OpenSkyCredentials | null) {
         client_secret: creds.clientSecret,
       }),
     })
-    if (!res.ok) throw new Error(`OpenSky token request failed with ${res.status}`)
+    if (!res.ok) throw new Error(`token request failed with ${res.status}`)
     const data = (await res.json()) as { access_token: string; expires_in?: number }
     // Tokens last 30 minutes when expires_in is missing
     token = {
@@ -52,19 +55,43 @@ export function createOpenSkyClient(credentials: OpenSkyCredentials | null) {
     return pendingToken
   }
 
-  // GET an API path such as "/states/all?lamin=…", authenticated when
-  // credentials are configured and anonymous otherwise
+  let authRetryAt = 0
+
+  function fallBackToAnonymous(reason: string) {
+    token = null
+    authRetryAt = Date.now() + AUTH_RETRY_MS
+    console.warn(
+      `OpenSky: ${reason}; using anonymous access for the next ${AUTH_RETRY_MS / 60_000} minutes`,
+    )
+  }
+
+  // Bearer header while the credentials work, none (anonymous) otherwise
+  async function authHeaders(creds: OpenSkyCredentials): Promise<Record<string, string>> {
+    if (Date.now() < authRetryAt) return {}
+    try {
+      return { Authorization: `Bearer ${await getToken(creds)}` }
+    } catch (err) {
+      fallBackToAnonymous(err instanceof Error ? err.message : 'token request failed')
+      return {}
+    }
+  }
+
+  // GET an API path such as "/states/all?lamin=…". Authenticated when working
+  // credentials are configured; anonymous when they're missing or rejected.
   async function get(path: string, signal?: AbortSignal): Promise<Response> {
     const url = OPENSKY_API + path
     if (!credentials) return fetch(url, { signal })
 
-    const send = async () =>
-      fetch(url, { signal, headers: { Authorization: `Bearer ${await getToken(credentials)}` } })
+    const send = async () => fetch(url, { signal, headers: await authHeaders(credentials) })
     const res = await send()
     if (res.status !== 401) return res
     // Token expired early or was revoked: get a fresh one and retry once
     token = null
-    return send()
+    const retry = await send()
+    if (retry.status !== 401) return retry
+    // Rejected even with a fresh token
+    fallBackToAnonymous('API rejected the account token')
+    return fetch(url, { signal })
   }
 
   return { get, authenticated: credentials !== null }
