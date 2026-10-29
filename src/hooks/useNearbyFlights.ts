@@ -102,6 +102,9 @@ export type NearbyFlightsData = {
   updatedAt: Date
 }
 
+// Fixed wait before retrying a failed request that isn't a rate limit
+export const ERROR_RETRY_MS = 2000
+
 // Used when a 429 arrives without OpenSky's retry-after header
 const DEFAULT_RATE_LIMIT_WAIT_MS = 5 * 60_000
 
@@ -144,6 +147,10 @@ export function useNearbyFlights({ paused = false } = {}) {
     isPaused: () => Date.now() < rateLimitedUntilRef.current,
     // SWR's own exponential retry would ignore OpenSky's retry-after time
     shouldRetryOnError: (err) => !(err instanceof RateLimitError),
+    // Other failures retry every ERROR_RETRY_MS instead of backing off
+    onErrorRetry(_err, _key, _config, revalidate, { retryCount }) {
+      setTimeout(() => revalidate({ retryCount }), ERROR_RETRY_MS)
+    },
     onError(err) {
       if (!(err instanceof RateLimitError)) return
       rateLimitedUntilRef.current = Date.now() + err.retryAfterMs

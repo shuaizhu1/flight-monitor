@@ -3,7 +3,7 @@ import { act, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { SWRConfig } from 'swr'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { POLL_INTERVAL_MS, RateLimitError, useNearbyFlights } from './useNearbyFlights'
+import { ERROR_RETRY_MS, POLL_INTERVAL_MS, RateLimitError, useNearbyFlights } from './useNearbyFlights'
 
 // OpenSky state vectors in their positional format: one aircraft parked at
 // SFO and one airborne at the given latitude
@@ -118,5 +118,26 @@ describe('useNearbyFlights rate-limit backoff', () => {
     expect(result.current.error).not.toBeInstanceOf(RateLimitError)
     expect(result.current.error?.message).toBe('OpenSky returned 500')
     expect(result.current.rateLimitedUntil).toBeNull()
+  })
+
+  it('retries other failures every 2 seconds without backing off', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(serverError())
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() => useNearbyFlights(), { wrapper })
+    await advance(0)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    for (let attempt = 2; attempt <= 4; attempt++) {
+      await advance(ERROR_RETRY_MS - 1)
+      expect(fetchMock).toHaveBeenCalledTimes(attempt - 1)
+      await advance(1)
+      expect(fetchMock).toHaveBeenCalledTimes(attempt)
+    }
+
+    fetchMock.mockResolvedValue(ok(openSkyBody(37.6)))
+    await advance(ERROR_RETRY_MS)
+    expect(result.current.data?.flights).toHaveLength(2)
+    expect(result.current.error).toBeUndefined()
   })
 })
