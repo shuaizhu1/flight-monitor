@@ -24,7 +24,7 @@ export type Flight = {
 
 // OpenSky returns each aircraft state as a positional array:
 // https://openskynetwork.github.io/opensky-api/rest.html#all-state-vectors
-type StateVector = [
+export type StateVector = [
   string, // 0 icao24
   string | null, // 1 callsign
   string, // 2 origin_country
@@ -39,7 +39,7 @@ type StateVector = [
   ...unknown[],
 ]
 
-function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+export function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const toRad = (d: number) => (d * Math.PI) / 180
   const dLat = toRad(lat2 - lat1)
   const dLon = toRad(lon2 - lon1)
@@ -66,6 +66,14 @@ function toFlight(s: StateVector): Flight | null {
   }
 }
 
+// Parses an OpenSky states array into flights, nearest to SFO first
+export function toFlights(states: StateVector[] | null): Flight[] {
+  return (states ?? [])
+    .map(toFlight)
+    .filter((f): f is Flight => f !== null)
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+}
+
 export function formatAltitude(f: Flight) {
   if (f.onGround) return 'On ground'
   return f.altitudeM != null ? `${Math.round(f.altitudeM * 3.281).toLocaleString()} ft` : '—'
@@ -87,7 +95,7 @@ export const STATES_PATH = `/states/all?${new URLSearchParams({
 // /opensky is proxied to https://opensky-network.org/api in vite.config.ts
 const FLIGHTS_URL = `/opensky${STATES_PATH}`
 
-type NearbyFlightsData = {
+export type NearbyFlightsData = {
   // Every aircraft in the search box, nearest to SFO first
   flights: Flight[]
   updatedAt: Date
@@ -97,21 +105,15 @@ async function fetchNearbyFlights(url: string): Promise<NearbyFlightsData> {
   const res = await fetch(url)
   if (!res.ok) throw new Error(`OpenSky returned ${res.status}`)
   const data: { states: StateVector[] | null } = await res.json()
-
-  const flights = (data.states ?? [])
-    .map(toFlight)
-    .filter((f): f is Flight => f !== null)
-    .sort((a, b) => a.distanceKm - b.distanceKm)
-
-  return { flights, updatedAt: new Date() }
+  return { flights: toFlights(data.states), updatedAt: new Date() }
 }
 
-// Every component using this hook shares the same SWR key, so they share one
-// request per poll. SWR waits for each request to settle before scheduling the
-// next, pauses polling while the tab is hidden, and keeps the last data when a
-// refresh fails.
-export function useNearbyFlights() {
-  return useSWR(FLIGHTS_URL, fetchNearbyFlights, {
+// Polls live flights. SWR waits for each request to settle before scheduling
+// the next, pauses polling while the tab is hidden, and keeps the last data
+// when a refresh fails. `paused` (used while replaying a recording) sends no
+// requests at all.
+export function useNearbyFlights({ paused = false } = {}) {
+  return useSWR(paused ? null : FLIGHTS_URL, fetchNearbyFlights, {
     refreshInterval: POLL_INTERVAL_MS,
   })
 }

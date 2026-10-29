@@ -3,13 +3,8 @@ import Map, { Layer, Popup, Source } from 'react-map-gl/mapbox'
 import type { FogSpecification, LayerProps, MapEvent, MapMouseEvent } from 'react-map-gl/mapbox'
 import type { FeatureCollection, Point } from 'geojson'
 import 'mapbox-gl/dist/mapbox-gl.css'
-import {
-  NEAREST_COUNT,
-  SFO,
-  formatAltitude,
-  formatSpeed,
-  useNearbyFlights,
-} from '../hooks/useNearbyFlights'
+import { useFlights } from '../flights/FlightsContext'
+import { NEAREST_COUNT, SFO, formatAltitude, formatSpeed } from '../hooks/useNearbyFlights'
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 
@@ -53,7 +48,7 @@ const flightLayer: LayerProps = {
 }
 
 function FlightGlobe() {
-  const { data } = useNearbyFlights()
+  const { data } = useFlights()
   const [iconReady, setIconReady] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 

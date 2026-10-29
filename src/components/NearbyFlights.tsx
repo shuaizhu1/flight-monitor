@@ -1,15 +1,10 @@
-import {
-  NEAREST_COUNT,
-  POLL_INTERVAL_MS,
-  formatAltitude,
-  formatSpeed,
-  useNearbyFlights,
-} from '../hooks/useNearbyFlights'
+import { useFlights } from '../flights/FlightsContext'
+import { NEAREST_COUNT, POLL_INTERVAL_MS, formatAltitude, formatSpeed } from '../hooks/useNearbyFlights'
 
 function NearbyFlights() {
-  const { data, error, isLoading } = useNearbyFlights()
+  const { data, error, isLoading, mode } = useFlights()
 
-  if (isLoading) return <p>Loading flights near SFO…</p>
+  if (isLoading) return <p>{mode === 'replay' ? 'Loading recording…' : 'Loading flights near SFO…'}</p>
   if (!data || data.flights.length === 0) {
     return <p>{error ? `Error: ${error.message}` : 'No flights found near SFO.'}</p>
   }
@@ -22,10 +17,14 @@ function NearbyFlights() {
       <h2>
         {flights.length} nearest of {data.flights.length} flights near SFO
       </h2>
-      <p>
-        Updated {updatedAt.toLocaleTimeString()} · refreshes every {POLL_INTERVAL_MS / 1000}s
-        {error && ` · Last refresh failed: ${error.message}`}
-      </p>
+      {mode === 'replay' ? (
+        <p>Replaying · {updatedAt.toLocaleTimeString()}</p>
+      ) : (
+        <p>
+          Updated {updatedAt.toLocaleTimeString()} · refreshes every {POLL_INTERVAL_MS / 1000}s
+          {error && ` · Last refresh failed: ${error.message}`}
+        </p>
+      )}
       <table>
         <thead>
           <tr>
