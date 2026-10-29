@@ -2,11 +2,14 @@ import { useFlights } from '../flights/FlightsContext'
 import { NEAREST_COUNT, POLL_INTERVAL_MS, formatAltitude, formatSpeed } from '../hooks/useNearbyFlights'
 
 function NearbyFlights() {
-  const { data, error, isLoading, mode } = useFlights()
+  const { data, error, isLoading, mode, rateLimitedUntil } = useFlights()
+  const failure = rateLimitedUntil
+    ? `OpenSky rate limit reached, resuming at ${rateLimitedUntil.toLocaleTimeString()}`
+    : error?.message
 
   if (isLoading) return <p>{mode === 'replay' ? 'Loading recording…' : 'Loading flights near SFO…'}</p>
   if (!data || data.flights.length === 0) {
-    return <p>{error ? `Error: ${error.message}` : 'No flights found near SFO.'}</p>
+    return <p>{failure ? `Error: ${failure}` : 'No flights found near SFO.'}</p>
   }
 
   const { updatedAt } = data
@@ -22,7 +25,7 @@ function NearbyFlights() {
       ) : (
         <p>
           Updated {updatedAt.toLocaleTimeString()} · refreshes every {POLL_INTERVAL_MS / 1000}s
-          {error && ` · Last refresh failed: ${error.message}`}
+          {failure && ` · ${rateLimitedUntil ? failure : `Last refresh failed: ${failure}`}`}
         </p>
       )}
       <table>

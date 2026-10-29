@@ -7,6 +7,8 @@ export type FlightsState = {
   error: Error | undefined
   isLoading: boolean
   mode: 'live' | 'replay'
+  // Set while live polling waits out OpenSky's rate limit
+  rateLimitedUntil: Date | null
 }
 
 const FlightsContext = createContext<FlightsState | null>(null)

@@ -16,8 +16,14 @@ function App() {
   const live = useNearbyFlights({ paused: replay.active })
 
   const flights: FlightsState = replay.active
-    ? { data: replay.data, error: replay.error, isLoading: replay.isLoading, mode: 'replay' }
-    : { data: live.data, error: live.error, isLoading: live.isLoading, mode: 'live' }
+    ? { data: replay.data, error: replay.error, isLoading: replay.isLoading, mode: 'replay', rateLimitedUntil: null }
+    : {
+        data: live.data,
+        error: live.error,
+        isLoading: live.isLoading,
+        mode: 'live',
+        rateLimitedUntil: live.rateLimitedUntil,
+      }
 
   return (
     <main>

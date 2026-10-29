@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 
 // SFO airport coordinates
@@ -101,8 +102,25 @@ export type NearbyFlightsData = {
   updatedAt: Date
 }
 
+// Used when a 429 arrives without OpenSky's retry-after header
+const DEFAULT_RATE_LIMIT_WAIT_MS = 5 * 60_000
+
+// The daily API credit budget is used up
+export class RateLimitError extends Error {
+  readonly retryAfterMs: number
+
+  constructor(retryAfterMs: number) {
+    super('OpenSky rate limit reached')
+    this.retryAfterMs = retryAfterMs
+  }
+}
+
 async function fetchNearbyFlights(url: string): Promise<NearbyFlightsData> {
   const res = await fetch(url)
+  if (res.status === 429) {
+    const retryAfterSec = Number(res.headers.get('x-rate-limit-retry-after-seconds'))
+    throw new RateLimitError(retryAfterSec > 0 ? retryAfterSec * 1000 : DEFAULT_RATE_LIMIT_WAIT_MS)
+  }
   if (!res.ok) throw new Error(`OpenSky returned ${res.status}`)
   const data: { states: StateVector[] | null } = await res.json()
   return { flights: toFlights(data.states), updatedAt: new Date() }
@@ -112,8 +130,37 @@ async function fetchNearbyFlights(url: string): Promise<NearbyFlightsData> {
 // the next, pauses polling while the tab is hidden, and keeps the last data
 // when a refresh fails. `paused` (used while replaying a recording) sends no
 // requests at all.
+//
+// When OpenSky's credit budget runs out, all requests (polling, error retries
+// and refetch-on-focus) stop until the time OpenSky says to retry; then one
+// request is made and normal polling resumes.
 export function useNearbyFlights({ paused = false } = {}) {
-  return useSWR(paused ? null : FLIGHTS_URL, fetchNearbyFlights, {
+  // Read by SWR's isPaused at request time; the state copy is for rendering
+  const rateLimitedUntilRef = useRef(0)
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<Date | null>(null)
+
+  const swr = useSWR(paused ? null : FLIGHTS_URL, fetchNearbyFlights, {
     refreshInterval: POLL_INTERVAL_MS,
+    isPaused: () => Date.now() < rateLimitedUntilRef.current,
+    // SWR's own exponential retry would ignore OpenSky's retry-after time
+    shouldRetryOnError: (err) => !(err instanceof RateLimitError),
+    onError(err) {
+      if (!(err instanceof RateLimitError)) return
+      rateLimitedUntilRef.current = Date.now() + err.retryAfterMs
+      setRateLimitedUntil(new Date(rateLimitedUntilRef.current))
+    },
   })
+
+  const { mutate } = swr
+  useEffect(() => {
+    if (!rateLimitedUntil) return
+    const timer = setTimeout(() => {
+      setRateLimitedUntil(null)
+      // SWR doesn't poll after a failed request, so resume with a fetch
+      mutate()
+    }, rateLimitedUntil.getTime() - Date.now())
+    return () => clearTimeout(timer)
+  }, [rateLimitedUntil, mutate])
+
+  return { ...swr, rateLimitedUntil }
 }
