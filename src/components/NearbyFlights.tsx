@@ -1,20 +1,28 @@
 import { useFlights } from '../flights/FlightsContext'
 import { NEAREST_COUNT, POLL_INTERVAL_MS, formatAltitude, formatSpeed } from '../hooks/useNearbyFlights'
+import { useThrottledValue } from '../hooks/useThrottledValue'
+import { FLAP_DURATION_MS, SplitFlap } from './SplitFlap'
 import './NearbyFlights.css'
+
+// Replay updates many times a second; hold each table update until the
+// callsign split-flap animation for the previous one has finished, so the
+// rest of the row never shows a different aircraft than its callsign
+const TABLE_UPDATE_MS = Math.max(1000, FLAP_DURATION_MS)
+
+// Callsigns are at most 7 characters; longer recorded values are cut off
+const CALLSIGN_LENGTH = 7
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 
 function NearbyFlights() {
-  const { data, error, isLoading, mode, rateLimitedUntil } = useFlights()
+  const { data: latest, error, isLoading, mode, rateLimitedUntil } = useFlights()
+  const data = useThrottledValue(latest, TABLE_UPDATE_MS)
   const failure = rateLimitedUntil
     ? `OpenSky rate limit reached, resuming at ${rateLimitedUntil.toLocaleTimeString()}`
     : error?.message
 
   const all = data?.flights ?? []
   const flights = all.slice(0, NEAREST_COUNT)
-  // Always render NEAREST_COUNT rows, so the card keeps its size while loading,
-  // on errors and when fewer aircraft are around
-  const placeholders = NEAREST_COUNT - flights.length
 
   let heading = `Nearest ${plural(flights.length, 'flight')} of ${plural(all.length, 'flight')}`
   let status: string
@@ -49,37 +57,30 @@ function NearbyFlights() {
             </tr>
           </thead>
           <tbody>
-            {flights.map((f, i) => (
-              <tr key={f.icao24}>
-                <td>
-                  <span className="callsign">
-                    <span className="rank" aria-label={`Rank ${i + 1}`}>
-                      {i + 1}
+            {/* Always NEAREST_COUNT rows, keyed by rank so each row stays put and
+                its callsign flips to the new aircraft, like a departures board.
+                Empty slots (loading, errors, few aircraft) show dashes. */}
+            {Array.from({ length: NEAREST_COUNT }, (_, i) => {
+              const f = flights[i]
+              return (
+                <tr key={i} className={f ? undefined : 'placeholder-row'} aria-hidden={!f || undefined}>
+                  <td>
+                    <span className="callsign">
+                      <span className="rank" aria-label={`Rank ${i + 1}`}>
+                        {i + 1}
+                      </span>
+                      <SplitFlap className="truncate" length={CALLSIGN_LENGTH} text={f ? f.callsign : '—'} />
                     </span>
-                    <span className="truncate">{f.callsign}</span>
-                  </span>
-                </td>
-                <td className="hide-narrow muted truncate">{f.originCountry}</td>
-                <td className="num">
-                  {f.onGround ? <span className="ground-badge">On ground</span> : formatAltitude(f)}
-                </td>
-                <td className="num">{formatSpeed(f)}</td>
-                <td className="num">{f.distanceKm.toFixed(1)} km</td>
-              </tr>
-            ))}
-            {Array.from({ length: placeholders }, (_, i) => (
-              <tr key={`placeholder-${i}`} className="placeholder-row" aria-hidden="true">
-                <td>
-                  <span className="callsign">
-                    <span className="rank">{flights.length + i + 1}</span>—
-                  </span>
-                </td>
-                <td className="hide-narrow">—</td>
-                <td className="num">—</td>
-                <td className="num">—</td>
-                <td className="num">—</td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="hide-narrow muted truncate">{f ? f.originCountry : '—'}</td>
+                  <td className="num">
+                    {!f ? '—' : f.onGround ? <span className="ground-badge">On ground</span> : formatAltitude(f)}
+                  </td>
+                  <td className="num">{f ? formatSpeed(f) : '—'}</td>
+                  <td className="num">{f ? `${f.distanceKm.toFixed(1)} km` : '—'}</td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

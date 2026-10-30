@@ -1,0 +1,72 @@
+.flap-text {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* One tile per character, split across the middle like a departures board */
+.flap {
+  --flap-bg: var(--code-bg);
+  display: inline-block;
+  position: relative;
+  margin-left: 1px;
+  padding: 0 1px;
+  border-radius: 2px;
+  background: var(--flap-bg);
+  line-height: 1.6;
+  text-align: center;
+  perspective: 120px;
+}
+
+.flap:first-child {
+  margin-left: 0;
+}
+
+.flap::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 1px;
+  background: var(--bg);
+  opacity: 0.9;
+}
+
+.flap-face {
+  display: inline-block;
+  transform-origin: 50% 50%;
+  animation: flap-turn 90ms ease-out;
+}
+
+@keyframes flap-turn {
+  from {
+    transform: rotateX(-80deg);
+    opacity: 0.4;
+  }
+  to {
+    transform: rotateX(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flap-face {
+    animation: none;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .flap {
+    margin-left: 0;
+    padding: 0;
+  }
+}
