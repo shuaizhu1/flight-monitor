@@ -3,18 +3,15 @@
 Live aircraft around San Francisco International (SFO), drawn on a Mapbox globe
 with a table of the five nearest flights. Data comes from the
 [OpenSky Network](https://opensky-network.org) API and refreshes every 10
-seconds. Recorded sessions can be replayed with a timeline scrubber, and the app
-falls back to a recording when live data is unavailable.
+seconds. Recorded sessions can be replayed with 3 playback speeds and a timeline scrubber.
 
 ![Demo: live flights around SFO, the five nearest flights, replaying a recorded session, scrubbing and changing speed, then back to live](docs/demo.gif)
 
 ## Requirements
 
-- Node.js 24 or newer (the recorder script runs TypeScript directly with Node)
 - A [Mapbox](https://account.mapbox.com/access-tokens/) public access token
   (`pk.…`) for the globe. Without one the table still works and the globe shows
   setup instructions.
-- Optional: an OpenSky API client for a higher rate limit (see below)
 
 ## Setup
 
@@ -94,4 +91,3 @@ newest demo recording in `public/recordings/` as soon as it loads, and hides the
 | `npm run lint` | Lint with Oxlint |
 | `npm run build` | Type-check and build for production into `dist/` |
 | `npm run preview` | Serve the production build locally |
-
