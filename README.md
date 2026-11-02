@@ -6,6 +6,8 @@ with a table of the five nearest flights. Data comes from the
 seconds. Recorded sessions can be replayed with a timeline scrubber, and the app
 falls back to a recording when live data is unavailable.
 
+![Flight Monitor demo: live flights around SFO, then replaying a recording with the timeline scrubber](docs/demo.gif)
+
 ## Requirements
 
 - Node.js 24 or newer (the recorder script runs TypeScript directly with Node)

@@ -1,0 +1,40 @@
+/* Amber-on-black departures-board tiles, the same in light and dark mode */
+.page-header .logo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0.4em;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.logo .flap {
+  --flap-bg: #1c1c1f;
+  margin-left: 2px;
+  padding: 0 3px;
+  border-radius: 3px;
+  color: #f5c542;
+  line-height: 1.4;
+}
+
+.logo .flap:first-child {
+  margin-left: 0;
+}
+
+/* The split across each tile */
+.logo .flap::after {
+  background: #000;
+  opacity: 0.6;
+}
+
+@media (max-width: 600px) {
+  .page-header .logo {
+    font-size: clamp(16px, 5.5vw, 24px);
+  }
+
+  .logo .flap {
+    margin-left: 1px;
+    padding: 0 2px;
+  }
+}
