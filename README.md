@@ -6,7 +6,7 @@ with a table of the five nearest flights. Data comes from the
 seconds. Recorded sessions can be replayed with a timeline scrubber, and the app
 falls back to a recording when live data is unavailable.
 
-![Flight Monitor demo: live flights around SFO, then replaying a recording with the timeline scrubber](docs/demo.gif)
+![Demo: live flights around SFO, the five nearest flights, replaying a recorded session, scrubbing and changing speed, then back to live](docs/demo.gif)
 
 ## Requirements
 
