@@ -5,9 +5,10 @@
   --page: #f6f6f8;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
+  /* Cobalt, the complement of the logo's amber */
+  --accent: #2f5bea;
+  --accent-bg: rgba(47, 91, 234, 0.08);
+  --accent-border: rgba(47, 91, 234, 0.45);
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
@@ -39,9 +40,9 @@
     --page: #0f1014;
     --border: #2e303a;
     --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
+    --accent: #5b82ff;
+    --accent-bg: rgba(91, 130, 255, 0.15);
+    --accent-border: rgba(91, 130, 255, 0.5);
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
