@@ -1,3 +1,4 @@
+import { useFlights } from '../flights/FlightsContext'
 import { SPEEDS } from '../replay/useReplay'
 import type { Replay } from '../replay/useReplay'
 import { useRecordingList } from '../replay/recordings'
@@ -35,6 +36,7 @@ type Props = {
 }
 
 function TimelineScrubber({ replay, notice, liveAvailable = true }: Props) {
+  const { mode } = useFlights()
   const { data: recordings, error: listError } = useRecordingList()
   const { frames } = replay
   // The list is sorted newest first
@@ -45,9 +47,17 @@ function TimelineScrubber({ replay, notice, liveAvailable = true }: Props) {
     <section className="card timeline" aria-label="Replay timeline">
       <div className="timeline-top">
         <p className="timeline-source">
-          {replay.active
-            ? current && `Playing from recording · ${recordingLabel(current)}`
-            : 'Showing live data from OpenSky'}
+          <span className={`mode-indicator mode-${mode}`}>{mode === 'live' ? 'Live' : 'Replay'}</span>
+          {replay.active ? (
+            current && `Recording from ${recordingLabel(current)}`
+          ) : (
+            <span>
+              From{' '}
+              <a href="https://opensky-network.org" target="_blank" rel="noreferrer">
+                OpenSky
+              </a>
+            </span>
+          )}
         </p>
         {replay.active
           ? liveAvailable && (

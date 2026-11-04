@@ -21,8 +21,6 @@ const LIVE_AVAILABLE = import.meta.env.DEV
 const PRODUCTION_NOTICE =
   'Live data unavailable: the OpenSky API blocks Vercel requests. Run locally with npm run dev to view live data.'
 
-const REPO_URL = 'https://github.com/shuaizhu1/flight-monitor'
-
 // GitHub mark, filled with the text color so it works in light and dark mode
 function GitHubIcon() {
   return (
@@ -96,13 +94,10 @@ function App() {
           <Logo />
           <p className="page-subtitle">Air traffic within about 55 km of San Francisco International (SFO)</p>
         </div>
-        <div className="header-actions">
-          <span className={`mode-badge mode-${flights.mode}`}>{flights.mode === 'live' ? 'Live' : 'Replay'}</span>
-          <a className="demo-link" href={REPO_URL} target="_blank" rel="noreferrer">
-            <GitHubIcon />
-            Demo
-          </a>
-        </div>
+        <a className="demo-link" href="https://github.com/shuaizhu1/flight-monitor" target="_blank" rel="noreferrer">
+          <GitHubIcon />
+          Demo
+        </a>
       </header>
 
       <FlightsProvider value={flights}>
@@ -120,8 +115,14 @@ function App() {
       </FlightsProvider>
 
       <footer className="page-footer">
-        Flight data from <a href="https://opensky-network.org">The OpenSky Network</a> · Map by{' '}
-        <a href="https://www.mapbox.com">Mapbox</a>
+        Flight data from{' '}
+        <a href="https://opensky-network.org" target="_blank" rel="noreferrer">
+          The OpenSky Network
+        </a>{' '}
+        · Map by{' '}
+        <a href="https://www.mapbox.com" target="_blank" rel="noreferrer">
+          Mapbox
+        </a>
       </footer>
     </main>
   )
