@@ -232,12 +232,17 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.speed button[aria-pressed='true'] {
-  background: var(--bg);
+.speed button:not([aria-pressed='true']):hover {
   color: var(--text-h);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* Filled with the accent, like the play button */
+.speed button[aria-pressed='true'] {
+  background: var(--accent);
+  color: #fff;
 }
 
 /* Secondary button */
